@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Израиль GPT 1.4.8.8</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#071a35;color:white;font-family:Arial,sans-serif}
+header{text-align:center;padding:25px;background:#0d3158}
+h1{margin:0;font-size:30px}
+header p{color:#a9d9ff}
+main{max-width:750px;margin:25px auto;padding:12px}
+#chat{height:65vh;min-height:350px;overflow-y:auto;background:#091e39;border:1px solid #3975a5;border-radius:18px;padding:15px}
+.msg{padding:13px;margin:12px 0;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.bot{background:#153b60}
+.user{background:#176bb1;text-align:right}
+form{display:flex;gap:8px;margin-top:12px}
+input{flex:1;min-width:0;padding:15px;border-radius:12px;border:1px solid #5286b4;background:#102b49;color:white;font-size:16px}
+button{padding:12px 17px;border:0;border-radius:12px;background:#1680d0;color:white;font-weight:bold}
+</style>
+</head>
+<body>
+<header>
+<h1>🇮🇱 ИЗРАИЛЬ GPT</h1>
+<p>Версия 1.4.8.8 • Слава Израилю</p>
+</header>
+<main>
+<div id="chat">
+<div class="msg bot">Ну что, задавай вопрос. Я слушаю.
+
+Слава Израилю 🇮🇱</div>
+</div>
+<form id="form">
+<input id="message" placeholder="Напиши сообщение..." autocomplete="off">
+<button id="send">ОТПРАВИТЬ</button>
+</form>
+</main>
+<script>
+const chat=document.getElementById('chat');
+const form=document.getElementById('form');
+const input=document.getElementById('message');
+const button=document.getElementById('send');
+let history=[];
+
+function add(text,type){
+ const div=document.createElement('div');
+ div.className='msg '+type;
+ div.textContent=text;
+ chat.appendChild(div);
+ chat.scrollTop=chat.scrollHeight;
+}
+
+form.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const text=input.value.trim();
+ if(!text)return;
+ add(text,'user');
+ input.value='';
+ button.disabled=true;
+ button.textContent='ДУМАЮ...';
+
+ const loading=document.createElement('div');
+ loading.className='msg bot';
+ loading.textContent='Израиль GPT печатает...';
+ chat.appendChild(loading);
+
+ try{
+  const response=await fetch('/.netlify/functions/chat',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({message:text,history})
+  });
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||'Ошибка сервера');
+  const answer=data.reply;
+  history.push({role:'user',content:text});
+  history.push({role:'assistant',content:answer});
+  loading.textContent=answer;
+ }catch(error){
+  loading.textContent='Ошибка подключения: '+error.message;
+ }finally{
+  button.disabled=false;
+  button.textContent='ОТПРАВИТЬ';
+ }
+});
+</script>
+</body>
+</html>
